@@ -36,11 +36,21 @@ class RobotView(App):
         self.load_data()
 
     def load_data(self):
-        """Nutzt robot.result zum Einlesen der XML"""
+        """Liest die XML rekursiv ein, um Verschachtelungen auf Linux zu unterstützen"""
         result = ExecutionResult(self.xml_path)
-        for suite in result.suite.suites: # Einfache Rekursion für Suites
+
+        # Nutzt eine interne Hilfsfunktion für die Rekursion
+        def _find_tests_rekursiv(suite):
+            # 1. Füge alle Tests der aktuellen Ebene hinzu
             for test in suite.tests:
                 self.all_tests.append(test)
+
+            # 2. Gehe tiefer in alle Untersuites (Unterordner)
+            for sub_suite in suite.suites:
+                _find_tests_rekursiv(sub_suite)
+
+        # Starte die Suche an der Wurzel der XML
+        _find_tests_rekursiv(result.suite)
 
     def compose(self) -> ComposeResult:
         yield Header()
